@@ -1,7 +1,3 @@
-// ============================================
-// GESTION.C / Definicion de variables y funciones
-// ============================================
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,18 +5,21 @@
 #include <time.h>
 #include "election.h"
 #include "gestion.h"
+#include "busqueda.h"
+#include "ordenamiento.h"
+#include "reportes.h"
 
+// Variables globales
 int eleccion_activa = 0;
 int anio_eleccion = 2026;
 char codigo_facultad[10] = "FIS"; 
 int max_estudiantes = 20; 
 int num_candidatos = 0;
-
 Candidato lista_candidatos[MAX_CANDIDATOS];
-
 char** registro_votos_global = NULL;
 int total_votos_emitidos = 0;
 
+// Funciones auxiliares
 int esNumeroValido(const char* str) {
     while (*str) {
         if (!isdigit(*str)) return 0;
@@ -29,39 +28,14 @@ int esNumeroValido(const char* str) {
     return 1;
 }
 
+// Recursividad
 int contarVotosRecursivo(Candidato* arr, int n) {
     if (n <= 0) return 0;
     if (arr[n - 1].activo == 0) return 0 + contarVotosRecursivo(arr, n - 1);
     return arr[n - 1].votos + contarVotosRecursivo(arr, n - 1);
 }
 
-void ordenarCandidatosSeleccion(Candidato* arr, int n) {
-    int i, j, max_idx;
-    for (i = 0; i < n - 1; i++) {
-        max_idx = i;
-        for (j = i + 1; j < n; j++) {
-            if (arr[j].votos > arr[max_idx].votos) {
-                max_idx = j;
-            }
-        }
-        Candidato temp = arr[max_idx];
-        arr[max_idx] = arr[i];
-        arr[i] = temp;
-    }
-}
-
-int busquedaBinariaVotante(char lista_votos[][15], int total_votos, char* id_objetivo) {
-    int izquierda = 0, derecha = total_votos - 1;
-    while (izquierda <= derecha) {
-        int medio = izquierda + (derecha - izquierda) / 2;
-        int cmp = strcmp(lista_votos[medio], id_objetivo);
-        if (cmp == 0) return medio; 
-        if (cmp < 0) izquierda = medio + 1;
-        else derecha = medio - 1;
-    }
-    return -1; 
-}
-
+// Imprimir matriz
 void imprimirMatrizOpciones(Candidato* arr, int n, int mostrar_votos) {
     printf("+----+--------------------+------------------------------+------------------------------+\n");
     if (mostrar_votos) {
@@ -90,6 +64,7 @@ void imprimirMatrizOpciones(Candidato* arr, int n, int mostrar_votos) {
     }
 }
 
+// Guardar configuración
 void guardarConfiguracionEleccion() {
     FILE* file = fopen("ElectionInfo.txt", "w");
     if (file == NULL) {
@@ -114,7 +89,9 @@ void guardarConfiguracionEleccion() {
     }
 }
 
+// Nueva elección
 void nuevaEleccion() {
+    system("cls");
     int candidatos_reales;
     printf("\n+=======================================================+\n");
     printf("|        CONFIGURACION DE NUEVO PROCESO ELECTORAL       |\n");
@@ -125,7 +102,7 @@ void nuevaEleccion() {
     scanf("%d", &anio_eleccion);
     
     if (anio_eleccion > 2026) {
-        printf("\n ERROR: No se puede configurar un proceso posterior al ano actual.\n");
+        printf("\n ERROR: No se puede configure un proceso posterior al ano actual.\n");
         eleccion_activa = 0;
         return;
     }
@@ -182,13 +159,28 @@ void nuevaEleccion() {
 
     FILE* f_padron = fopen("padron.txt", "w");
     if (f_padron != NULL) {
-        fprintf(f_padron, "202020672\n202311070\n202311527\n202320638\n202320751\n");
-        fprintf(f_padron, "202321756\n202410572\n202411468\n202420886\n202421275\n");
-        fprintf(f_padron, "202421654\n202510266\n202510627\n202510751\n202510882\n");
-        fprintf(f_padron, "202511020\n202511180\n202511523\n202520625\n202521207\n");
+        // Se mantiene el orden numerico de menor a mayor para la busqueda binaria
+        fprintf(f_padron, "202020672,JUAN PEREZ\n");
+        fprintf(f_padron, "202311070,MARIA GOMEZ\n");
+        fprintf(f_padron, "202311527,CARLOS LOPEZ\n");
+        fprintf(f_padron, "202320638,ANA MARTINEZ\n");
+        fprintf(f_padron, "202320751,ERICK CUJI\n");
+        fprintf(f_padron, "202321756,LUIS RODRIGUEZ\n");
+        fprintf(f_padron, "202410572,DIANA ALVAREZ\n");
+        fprintf(f_padron, "202411468,PABLO CASTRO\n");
+        fprintf(f_padron, "202420886,ELENA MEJIA\n");
+        fprintf(f_padron, "202421275,JORGE ANDRADE\n");
+        fprintf(f_padron, "202421654,CRISTINA DIAZ\n");
+        fprintf(f_padron, "202510266,RICARDO SERRANO\n");
+        fprintf(f_padron, "202510627,PATRICIA FUENTES\n");
+        fprintf(f_padron, "202510751,SANTIAGO ORTIZ\n");
+        fprintf(f_padron, "202510882,GABRIELA PINTO\n");
+        fprintf(f_padron, "202511020,JAIRO ENRIQUEZ\n");
+        fprintf(f_padron, "202511180,ANDERSON VERDEZOTO\n");
+        fprintf(f_padron, "202511523,STEVEN TORRES\n");
+        fprintf(f_padron, "202520625,VANESSA REYES\n");
+        fprintf(f_padron, "202521207,JOSE VILLA\n");
         fclose(f_padron);
-        printf("\nPADRON Base de datos de 20 estudiantes generada exitosamente.\n");
-        printf("PROCESO Eleccion configurada y lista para votar.\n");
     }
 
     eleccion_activa = 1;
@@ -196,7 +188,9 @@ void nuevaEleccion() {
     guardarConfiguracionEleccion();
 }
 
+// Agregar candidato
 void agregarCandidatoDinamico() {
+    system("cls");
     if (num_candidatos >= MAX_CANDIDATOS) {
         printf("\n ERROR: Limite maximo de listas alcanzado.\n");
         return;
@@ -232,7 +226,9 @@ void agregarCandidatoDinamico() {
     printf("\n  Nueva lista integrada exitosamente al proceso.\n");
 }
 
+// Quitar candidato
 void quitarCandidatoDinamico() {
+    system("cls");
     int id_quitar;
     printf("\n+---------------------------------------------------+\n");
     printf("|      RETIRAR LISTA DEL PROCESO ELECTORAL      |\n");
@@ -249,7 +245,9 @@ void quitarCandidatoDinamico() {
     }
 }
 
+// Continuar elección
 void continuarEleccion() {
+    system("cls");
     FILE* file = fopen("ElectionInfo.txt", "r");
     if (file == NULL) {
         printf("\n ERROR: No existen votaciones previas registradas en disco.\n");
@@ -279,60 +277,9 @@ void continuarEleccion() {
     printf("\n  Proceso de votaciones restaurado exitosamente.\n");
 }
 
-void generarReporteActa(int total_votos, float porc_part, float porc_aus, Candidato* copia_ordenada) {
-    FILE* f_acta = fopen("Acta_Electoral_AEIS.txt", "w");
-    if (f_acta == NULL) {
-        printf("[Error] No se pudo generar el acta de votacion en texto plano.\n");
-        return;
-    }
-
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-
-    fprintf(f_acta, "=================================================================================\n");
-    fprintf(f_acta, "                ESCUELA POLITECNICA NACIONAL - FACULTAD DE FIS                   \n");
-    fprintf(f_acta, "             ACTA FORMAL DE ESCRUTINIO: PRESIDENCIA DE LA AEIS                   \n");
-    fprintf(f_acta, "=================================================================================\n\n");
-    fprintf(f_acta, "Fecha y Hora de Cierre: %02d-%02d-%d %02d:%02d:%02d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec);
-    fprintf(f_acta, "Ano del Proceso Electoral: %d\n", anio_eleccion);
-    fprintf(f_acta, "Padron de Estudiantes FIS Habilitados: %d\n", max_estudiantes);
-    fprintf(f_acta, "Total de Votos Emitidos: %d\n", total_votos);
-    fprintf(f_acta, "Porcentaje de Participacion Efectiva: %.1f%%\n", porc_part);
-    fprintf(f_acta, "Porcentaje de Ausentismo: %.1f%%\n\n", porc_aus);
-
-    fprintf(f_acta, "\n----------------------------- RANKING ELECTORAL FINAL -----------------------------\n");
-    fprintf(f_acta, "+----+--------------------+------------------------------+--------------------+-------+\n");
-    fprintf(f_acta, "| Pos| Lista              | Presidente                   | Vicepresidente     | Votos |\n");
-    fprintf(f_acta, "+----+--------------------+------------------------------+--------------------+-------+\n");
-
-    int pos = 1;
-    for (int i = 0; i < num_candidatos; i++) {
-        if (copia_ordenada[i].activo == 0) continue;
-        fprintf(f_acta, "| %-2d | %-18s | %-28s | %-18s | %-5d |\n", 
-                pos++, copia_ordenada[i].nombre_lista, copia_ordenada[i].presidente, copia_ordenada[i].vicepresidente, copia_ordenada[i].votos);
-    }
-    fprintf(f_acta, "+----+--------------------+------------------------------+--------------------+-------+\n\n");
-
-    for(int i = 0; i < num_candidatos; i++) {
-        if(strcmp(copia_ordenada[i].nombre_lista, "Voto Blanco") != 0 && strcmp(copia_ordenada[i].nombre_lista, "Voto Nulo") != 0) {
-            fprintf(f_acta, "--------------------------------- DIGNIDADES ELECTAS ---------------------------\n");
-            fprintf(f_acta, "LISTA GANADORA ELECTA DE LA AEIS: %s\n", copia_ordenada[i].nombre_lista);
-            fprintf(f_acta, "PRESIDENTE: %s\n", copia_ordenada[i].presidente);
-            fprintf(f_acta, "VICEPRESIDENTE: %s\n", copia_ordenada[i].vicepresidente);
-            fprintf(f_acta, "--------------------------------------------------------------------------------\n\n");
-            break;
-        }
-    }
-
-    fprintf(f_acta, "Firmas de Validacion del Tribunal FIS:\n\n\n");
-    fprintf(f_acta, "      __________________________              __________________________\n");
-    fprintf(f_acta, "         Presidente del Tribunal                  Secretario de Actas\n");
-    fclose(f_acta);
-
-    printf("[Reportes] El acta electoral oficial ha sido exportada a 'Acta_Electoral_AEIS.txt'.\n");
-}
-
+// Mostrar resultados
 void mostrarResultados() {
+    system("cls");
     FILE* f_verificar = fopen("ElectionInfo.txt", "r");
     if (f_verificar != NULL) {
         int dump_int; char dump_str[20];
@@ -374,11 +321,11 @@ void mostrarResultados() {
             if(copia_ordenada[i].activo == 0) continue;
             if(strcmp(copia_ordenada[i].nombre_lista, "Voto Blanco") != 0 && strcmp(copia_ordenada[i].nombre_lista, "Voto Nulo") != 0) {
                 printf("\n+=======================================================+\n");
-                printf("|                  DIGNIDADES ELECTAS              |\n");
+                printf("|                  DIGNIDADES ELECTAS                   |\n");
                 printf("+=======================================================+\n");
-                printf("|  LISTA GANADORA:      %-38s|\n", copia_ordenada[i].nombre_lista);
-                printf("|  PRESIDENTE ELECTO:   %-38s|\n", copia_ordenada[i].presidente);
-                printf("|  VICEPRESIDENTE ELEC: %-38s|\n", copia_ordenada[i].vicepresidente);
+                printf("|  LISTA GANADORA:      %-31s |\n", copia_ordenada[i].nombre_lista);
+                printf("|  PRESIDENTE ELECTO:   %-31s |\n", copia_ordenada[i].presidente);
+                printf("|  VICEPRESIDENTE ELEC: %-31s |\n", copia_ordenada[i].vicepresidente);
                 printf("+=======================================================+\n");
                 break;
             }
@@ -389,23 +336,29 @@ void mostrarResultados() {
     float porcentaje_no_votaron = 100.0 - porcentaje_votaron;
 
     printf("\n+=======================================================+\n");
-    printf("|         ESTADISTICAS GENERALES DEL PROCESO             |\n");
+    printf("|         ESTADISTICAS GENERALES DEL PROCESO            |\n");
     printf("+=======================================================+\n");
-    printf("|  Total estudiantes del padron FIS:      %-18d|\n", max_estudiantes);
-    printf("|  Votos emitidos totales:                %-18d|\n", total_votos);
-    printf("|  Porcentaje de Participacion:           %-17.1f%%|\n", porcentaje_votaron);
-    printf("|  Porcentaje de Ausentismo:              %-17.1f%%|\n", porcentaje_no_votaron);
+    printf("|  Total estudiantes del padron FIS:      %-13d |\n", max_estudiantes);
+    printf("|  Votos emitidos totales:                %-13d |\n", total_votos);
+    printf("|  Porcentaje de Participacion:           %-11.1f%%  |\n", porcentaje_votaron);
+    printf("|  Porcentaje de Ausentismo:              %-11.1f%%  |\n", porcentaje_no_votaron);
     printf("+=======================================================+\n");
 
     generarReporteActa(total_votos, porcentaje_votaron, porcentaje_no_votaron, copia_ordenada);
 }
 
+// Panel de estudiantes
 void studentPanel() {
+    system("cls");
+    
     if (!eleccion_activa || total_votos_emitidos >= max_estudiantes) {
-        printf("\n+=======================================================+\n");
-        printf("|  ERROR: PROCESO CERRADO                                  |\n");
-        printf("|  Se ha alcanzado el cupo maximo de votantes.            |\n");
-        printf("+=======================================================+\n");
+        printf("\n+===================================================+\n");
+        printf("|  ERROR: PROCESO CERRADO                          |\n");
+        printf("|  Se ha alcanzado el cupo maximo de votantes.      |\n");
+        printf("+===================================================+\n");
+        printf("\nPresione Enter para continuar...");
+        getchar();
+        getchar();
         eleccion_activa = 0;
         return;
     }
@@ -418,11 +371,22 @@ void studentPanel() {
     scanf("%s", id_usuario);
 
     if (!esNumeroValido(id_usuario)) {
-        printf("\n ERROR: ID Invalido. Solo numeros permitidos.\n");
+        printf("\n+=======================================================+\n");
+        printf("|  ERROR: ID Invalido. Solo numeros permitidos.         |\n");
+        printf("+=======================================================+\n");
+        printf("\nPresione Enter para continuar...");
+        getchar();
+        getchar();
         return;
     }
+
     if (strlen(id_usuario) < 8 || strlen(id_usuario) > 10) {
-        printf("\n ERROR: ID Invalido. Longitud incorrecta (8-10 digitos).\n");
+        printf("\n+=======================================================+\n");
+        printf("|  ERROR: ID Invalido. Longitud incorrecta (8-10 digitos).|\n");
+        printf("+=======================================================+\n");
+        printf("\nPresione Enter para continuar...");
+        getchar();
+        getchar();
         return;
     }
 
@@ -432,7 +396,12 @@ void studentPanel() {
     int anio_ingreso = atoi(anio_str);
 
     if (anio_ingreso > 2026) {
-        printf("\n ERROR: ID Invalido. Anio de ingreso incorrecto.\n");
+        printf("\n+=======================================================+\n");
+        printf("|  ERROR: ID Invalido. Anio de ingreso incorrecto.        |\n");
+        printf("+=======================================================+\n");
+        printf("\nPresione Enter para continuar...");
+        getchar();
+        getchar();
         return;
     }
 
@@ -442,30 +411,57 @@ void studentPanel() {
         return;
     }
 
-    char padron_memoria[20][15];
+    char padron_codigos[20][15];
+    char padron_nombres[20][40];
     int total_padron = 0;
-    while (total_padron < 20 && fscanf(file_padron, "%s", padron_memoria[total_padron]) != EOF) {
-        padron_memoria[total_padron][strcspn(padron_memoria[total_padron], "\r\n")] = '\0';
-        total_padron++;
+    char linea[100];
+
+    // Procesamos linea por linea separando el codigo del nombre usando la coma ','
+    while (total_padron < 20 && fgets(linea, sizeof(linea), file_padron) != NULL) {
+        linea[strcspn(linea, "\r\n")] = '\0';
+        char* token_codigo = strtok(linea, ",");
+        char* token_nombre = strtok(NULL, ",");
+        
+        if (token_codigo != NULL && token_nombre != NULL) {
+            strcpy(padron_codigos[total_padron], token_codigo);
+            strcpy(padron_nombres[total_padron], token_nombre);
+            total_padron++;
+        }
     }
     fclose(file_padron);
 
-    int indice_encontrado = busquedaBinariaVotante(padron_memoria, total_padron, id_usuario);
+    // Buscamos solo el codigo numerico en el arreglo de codigos
+    int indice_encontrado = busquedaBinariaVotante(padron_codigos, total_padron, id_usuario);
     if (indice_encontrado == -1) {
-        printf("\n ERROR: ACCESO DENEGADO: No consta en el padron electoral.\n");
+        printf("\n+=======================================================+\n");
+        printf("|  ERROR: ACCESO DENEGADO                                 |\n");
+        printf("|  No consta en el padron electoral.                      |\n");
+        printf("+=======================================================+\n");
+        printf("\nPresione Enter para continuar...");
+        getchar();
+        getchar();
         return;
     }
 
     for (int i = 0; i < total_votos_emitidos; i++) {
         if (strcmp(registro_votos_global[i], id_usuario) == 0) {
-            printf("\n ERROR: El codigo ingresado YA REGISTRA UN VOTO.\n");
+            printf("\n+=======================================================+\n");
+            printf("|  ERROR: El codigo ingresado YA REGISTRA UN VOTO.      |\n");
+            printf("|  No se permite el doble voto.                         |\n");
+            printf("+=======================================================+\n");
+            printf("\nPresione Enter para continuar...");
+            getchar();
+            getchar();
             return;
         }
     }
 
+    // Si todo esta correcto, damos una bienvenida personalizada
     printf("\n  Identificacion validada correctamente.\n");
+    printf("  Bienvenido/a: %s\n", padron_nombres[indice_encontrado]);
+    
     printf("\n+-----------------------------------------------------+\n");
-    printf("|      OPCIONES DE VOTO DISPONIBLES (FIS)            |\n");
+    printf("|      OPCIONES DE VOTO DISPONIBLES (FIS)             |\n");
     printf("+-----------------------------------------------------+\n\n");
     imprimirMatrizOpciones(lista_candidatos, num_candidatos, 0);
 

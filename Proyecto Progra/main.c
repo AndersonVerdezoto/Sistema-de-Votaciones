@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "election.h"
 #include "gestion.h"
 #include "busqueda.h"
@@ -28,6 +29,7 @@
 #endif
 
 void panelAdministrador() {
+    system("cls");
     char usuario[20];
     char contrasenia[20];
     char ch;
@@ -96,6 +98,8 @@ void panelAdministrador() {
 int main() {
     int opcion = 0;
     while(opcion != 3) {
+        system("cls");
+
         printf("\n+=======================================================+\n");
         printf("|                                                       |\n");
         printf("|      ESCUELA POLITECNICA NACIONAL - FACULTAD FIS      |\n");
@@ -110,9 +114,10 @@ int main() {
         scanf("%d", &opcion);
 
         switch(opcion) {
-            case 1: studentPanel(); break;
-            case 2: panelAdministrador(); break;
-            case 3: printf("\n+=======================================================+\n");
+            case 1: system("cls"); studentPanel(); break;
+            case 2: system("cls"); panelAdministrador(); break;
+            case 3: system("cls");
+                    printf("\n+=======================================================+\n");
                     printf("|    Programa de Votaciones de la AEIS Finalizado        |\n");
                     printf("|     Gracias por su participacion en el proceso         |\n");
                     printf("+=======================================================+\n\n"); break;
