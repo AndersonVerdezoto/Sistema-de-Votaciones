@@ -1,0 +1,18 @@
+# Archivos compilados
+*.exe
+
+# Archivos generados por el programa (se crean al ejecutar)
+ElectionInfo.txt
+candidate*.txt
+Acta_Electoral_AEIS.txt
+
+# Carpetas de IDE
+.vscode/
+output/
+
+# Documentos de Word
+*.docx
+
+# Pero SÍ sube estos:
+!padron.txt
+!README.md
